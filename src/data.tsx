@@ -346,7 +346,8 @@ export const productData = [
     name: "Black dog single malt whiskey 750ml",
     price: 3500.0,
     category: "GROCERIES",
-    image: "https://www.spencers.in/media/catalog/product/1/0/1087299.jpg",
+    image:
+      "https://lh6.googleusercontent.com/proxy/PMRqsdhjacKvLdyLRLv8yiCaz4nt6TTcjFoXbjE6VXmtbbojlAHILXsCVTzOWCT9Pw0JWVv9RzgkLbFkZPMVZVfTjeMqG7PvfIFfw99O-eg-yt2RKvQ3cOmAjHfG-uca84moQDgohDgsfwfpmSIu8cZO6s7wB9pdje8B7BbySy8rse_LQeZJPb7D8LjKB9KqT_OvjV6HR0LPZlKkMXR15zCGuD1t7A",
     createdAt: "2024-04-01 11:52:22",
     updatedAt: "2024-04-01 11:52:22",
     description: null,
