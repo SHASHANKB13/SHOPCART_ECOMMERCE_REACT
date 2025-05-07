@@ -355,4 +355,18 @@ export const productData = [
     reviewsCount: 2,
     brand: null,
   },
+  {
+    id: 21,
+    name: "Apple iphone 16 pro max (256gb)",
+    price: 139999.0,
+    category: "MOBILE",
+    image:
+      "https://cdn0.it4profit.com/s3size/rt:fill/w:900/h:900/g:no/el:1/f:webp/plain/s3://cms/product/6b/96/6b96c9c6f49de081181cbceab09da55d/250331120242404871.webp",
+    createdAt: "2024-03-26 09:35:23",
+    updatedAt: "2024-03-26 09:35:23",
+    description: null,
+    rating: 4.8,
+    reviewsCount: 8,
+    brand: "Apple",
+  },
 ];
