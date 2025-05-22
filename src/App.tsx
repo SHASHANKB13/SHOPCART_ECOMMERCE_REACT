@@ -4,8 +4,11 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 const ProductList = lazy(
   () => import("./components/dashboard/ProductListing.tsx")
 );
-const CommonNavBar = lazy(
-  () => import("./components/common-navbar/CommonNavbar.tsx")
+// const CommonNavBar = lazy(
+//   () => import("./components/common-navbar/CommonNavbar.tsx")
+// );
+const ProductDetails = lazy(
+  () => import("./components/dashboard/ProductDetail.tsx")
 );
 
 const App = () => {
@@ -14,6 +17,7 @@ const App = () => {
       <Router>
         <Routes>
           <Route path="/" element={<ProductList />} />
+          <Route path="/product/:id" element={<ProductDetails />} />
         </Routes>
       </Router>
     </Box>

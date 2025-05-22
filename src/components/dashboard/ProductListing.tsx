@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   Image,
@@ -23,12 +23,13 @@ import {
   PasswordInput,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useNavigate } from "react-router-dom";
 import { notifications } from "@mantine/notifications";
 import { HiShoppingCart } from "react-icons/hi";
 import { BsPersonCircle } from "react-icons/bs";
 import { IconX, IconCheck } from "@tabler/icons-react";
 import { BsSearch } from "react-icons/bs";
-import { productData } from "../../data.tsx";
+// import { productData } from "../../data.tsx";
 import classes from "./Card.module.css";
 
 type Product = {
@@ -46,57 +47,60 @@ type Product = {
 };
 
 const ProductList = () => {
-  const [data, setData] = useState<Product[]>(productData);
+  const navigate = useNavigate();
+  // states
+  const [data, setData] = useState<Product[]>([]);
+  const [productData, setProductData] = useState<Product[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 30000]);
   const [ratings, setRatings] = useState(["4"]);
-  const [jsonData, setJsonData] = useState<{
-    category: string;
-    brand: string;
-    products: Product[];
-  }>({ category: "", brand: "", products: [] });
   const [searchValue, setSearchValue] = useState("");
   const [cartCount, setCartCount] = useState(0);
   const [cartButtonState, setCartButtonState] = useState<{
     [key: string]: string;
   }>({});
+  const [jsonData, setJsonData] = useState<{
+    category: string;
+    brand: string;
+    products: Product[];
+  }>({
+    category: "",
+    brand: "",
+    products: [],
+  });
   const theme = useMantineTheme();
   const [opened, { close, open }] = useDisclosure(false);
-  // Handle category selection
-  const handleCategoryChange = (category: string) => {
-    if (!category) {
-      setJsonData({ ...jsonData, category: "", products: productData });
-      setData(productData);
-      return;
-    }
-    const filteredProducts = productData.filter(
-      (product) => product.category === category
-    );
-    setJsonData({ category, products: filteredProducts });
-    setData(filteredProducts);
-  };
 
-  // Handle brand selection
-  const handleBrandChange = (brand: string | null) => {
-    if (!brand) {
-      setJsonData({ ...jsonData, brand: "", products: productData });
-      setData(productData);
-      return;
-    }
-
-    const filteredProducts = productData.filter(
-      (product) => product.brand === brand
-    );
-
-    setJsonData({ ...jsonData, brand, products: filteredProducts });
-    setData(filteredProducts);
-  };
-
+  // fetch products
   useEffect(() => {
-    // Ensure jsonData updates when a category is selected
-    if (jsonData.category) {
-      setData(jsonData.products);
-    }
-  }, [jsonData]);
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:5000/api/products");
+        const result = await response.json();
+        const products = result?.data?.products || [];
+        setData(products);
+        setProductData(products);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  // handle filters
+  const handleCategoryChange = (category: string) => {
+    const filtered = productData.filter(
+      (p) => !category || p.category === category
+    );
+    setJsonData({ ...jsonData, category, products: filtered });
+    setData(filtered);
+  };
+
+  const handleBrandChange = (brand: string | null) => {
+    const filtered = productData.filter((p) => !brand || p.brand === brand);
+    setJsonData({ ...jsonData, brand: brand || "", products: filtered });
+    setData(filtered);
+  };
 
   const onSearchChange = (value: string) => {
     setSearchValue(value);
@@ -170,6 +174,10 @@ const ProductList = () => {
       console.error("Error logging in:", error);
       alert("An error occurred. Please try again.");
     }
+  };
+
+  const handleProductClick = (id: number) => {
+    navigate(`/product/${id}`);
   };
 
   return (
@@ -335,6 +343,7 @@ const ProductList = () => {
                     radius="md"
                     withBorder
                     className={classes.customCard}
+                    onClick={() => handleProductClick(product.id)}
                     // style={{ border: "1px solid #E6E5E5" }}
                     style={{
                       border: "1px solid #E6E5E5",
