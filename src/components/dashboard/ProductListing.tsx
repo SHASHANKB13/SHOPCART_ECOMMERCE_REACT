@@ -18,8 +18,13 @@ import {
   Flex,
   TextInput,
   Indicator,
+  Popover,
+  Modal,
+  PasswordInput,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { HiShoppingCart } from "react-icons/hi";
+import { BsPersonCircle } from "react-icons/bs";
 import { BsSearch } from "react-icons/bs";
 import { productData } from "../../data.tsx";
 import classes from "./Card.module.css";
@@ -53,7 +58,7 @@ const ProductList = () => {
     [key: string]: string;
   }>({});
   const theme = useMantineTheme();
-
+  const [opened, { close, open }] = useDisclosure(false);
   // Handle category selection
   const handleCategoryChange = (category: string) => {
     if (!category) {
@@ -116,6 +121,17 @@ const ProductList = () => {
     }));
   };
 
+  const [loginModalOpened, { open: loginModalOpen, close: loginModalClose }] =
+    useDisclosure(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = () => {
+    // Replace this with your actual login API call
+    console.log("Logging in with:", { username, password });
+    close(); // close the modal after login
+  };
+
   return (
     <Container size="xl" mt="sm">
       {/* Header Section */}
@@ -157,7 +173,29 @@ const ProductList = () => {
 
         {/* Right Section */}
 
-        <Group justify="space-between" gap="xs" mr="lg">
+        <Group justify="space-between" gap="md" align="center" mr="lg">
+          {/* <BsPersonCircle size={24} color="white" /> */}
+          <Popover
+            width={200}
+            position="bottom"
+            withArrow
+            shadow="md"
+            opened={opened}
+          >
+            <Popover.Target>
+              <BsPersonCircle
+                onMouseEnter={open}
+                onMouseLeave={close}
+                size={24}
+                color="white"
+                onClick={loginModalOpen}
+                style={{ cursor: "pointer" }}
+              />
+            </Popover.Target>
+            <Popover.Dropdown style={{ pointerEvents: "none" }}>
+              <Text size="sm">Please login/register to continue</Text>
+            </Popover.Dropdown>
+          </Popover>
           <Indicator inline label={cartCount} size={16} color="red">
             <HiShoppingCart size={24} color="white" />
           </Indicator>
@@ -315,6 +353,43 @@ const ProductList = () => {
           </Grid>
         </Grid.Col>
       </Grid>
+      <>
+        <Modal
+          opened={loginModalOpened}
+          onClose={loginModalClose}
+          title="Login"
+          centered
+        >
+          <Stack>
+            <TextInput
+              label="Username"
+              placeholder="Enter your username"
+              value={username}
+              onChange={(e) => setUsername(e.currentTarget.value)}
+              required
+            />
+            <PasswordInput
+              label="Password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.currentTarget.value)}
+              required
+            />
+            <Group justify="flex-end" mt="md">
+              <Button
+                variant="light"
+                onClick={loginModalClose}
+                color={theme.colors.deepBlue[4]}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleLogin} color={theme.colors.deepBlue[4]}>
+                Login
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
+      </>
     </Container>
   );
 };

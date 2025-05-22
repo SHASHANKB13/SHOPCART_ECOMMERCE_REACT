@@ -343,14 +343,14 @@ export const productData = [
   },
   {
     id: 20,
-    name: "Black dog single malt whiskey 750ml",
-    price: 3500.0,
+    name: "Johny walker Double black whiskey 750ml",
+    price: 6800.0,
     category: "GROCERIES",
     image:
-      "https://lh6.googleusercontent.com/proxy/PMRqsdhjacKvLdyLRLv8yiCaz4nt6TTcjFoXbjE6VXmtbbojlAHILXsCVTzOWCT9Pw0JWVv9RzgkLbFkZPMVZVfTjeMqG7PvfIFfw99O-eg-yt2RKvQ3cOmAjHfG-uca84moQDgohDgsfwfpmSIu8cZO6s7wB9pdje8B7BbySy8rse_LQeZJPb7D8LjKB9KqT_OvjV6HR0LPZlKkMXR15zCGuD1t7A",
+      "https://shop.adr.it/media/catalog/product/cache/144a39f8181968952835af6ee54dde24/L/T/LTR_100101255_1_1.jpeg",
     createdAt: "2024-04-01 11:52:22",
     updatedAt: "2024-04-01 11:52:22",
-    description: null,
+    description: "Single malt whiskey",
     rating: null,
     reviewsCount: 2,
     brand: null,
