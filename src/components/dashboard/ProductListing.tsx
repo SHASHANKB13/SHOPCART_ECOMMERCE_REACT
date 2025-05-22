@@ -23,8 +23,10 @@ import {
   PasswordInput,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { HiShoppingCart } from "react-icons/hi";
 import { BsPersonCircle } from "react-icons/bs";
+import { IconX, IconCheck } from "@tabler/icons-react";
 import { BsSearch } from "react-icons/bs";
 import { productData } from "../../data.tsx";
 import classes from "./Card.module.css";
@@ -125,11 +127,49 @@ const ProductList = () => {
     useDisclosure(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [user, setUser] = useState("");
 
-  const handleLogin = () => {
-    // Replace this with your actual login API call
-    console.log("Logging in with:", { username, password });
-    close(); // close the modal after login
+  const handleLogin = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const message = data.message;
+        setUser(data?.data?.username);
+        console.log("Login successful:", data);
+        notifications.show({
+          title: "Success!",
+          message: message || "Login successful",
+          icon: <IconCheck size={16} />,
+          autoClose: 3000,
+          color: "Green",
+          position: "top-right",
+        });
+
+        loginModalClose();
+      } else {
+        console.error("Login failed:", data.error || "Unknown error");
+        notifications.show({
+          title: "Error!",
+          icon: <IconX size={16} />,
+          autoClose: 3000,
+          message: data.error || "Login failed",
+          color: "red",
+          position: "top-right",
+        });
+      }
+    } catch (error) {
+      console.error("Error logging in:", error);
+      alert("An error occurred. Please try again.");
+    }
   };
 
   return (
@@ -174,28 +214,40 @@ const ProductList = () => {
         {/* Right Section */}
 
         <Group justify="space-between" gap="md" align="center" mr="lg">
+          {user ? (
+            <Flex align="center" gap="xs">
+              <Text c="white" size="sm">
+                Welcome, {user}
+              </Text>
+              <BsPersonCircle size={20} color="white" />
+            </Flex>
+          ) : (
+            <>
+              <Popover
+                width={200}
+                position="bottom"
+                withArrow
+                shadow="md"
+                opened={opened}
+              >
+                <Popover.Target>
+                  <BsPersonCircle
+                    onMouseEnter={open}
+                    onMouseLeave={close}
+                    size={24}
+                    color="white"
+                    onClick={loginModalOpen}
+                    style={{ cursor: "pointer" }}
+                  />
+                </Popover.Target>
+                <Popover.Dropdown style={{ pointerEvents: "none" }}>
+                  <Text size="sm">Please login/register to continue</Text>
+                </Popover.Dropdown>
+              </Popover>
+            </>
+          )}
           {/* <BsPersonCircle size={24} color="white" /> */}
-          <Popover
-            width={200}
-            position="bottom"
-            withArrow
-            shadow="md"
-            opened={opened}
-          >
-            <Popover.Target>
-              <BsPersonCircle
-                onMouseEnter={open}
-                onMouseLeave={close}
-                size={24}
-                color="white"
-                onClick={loginModalOpen}
-                style={{ cursor: "pointer" }}
-              />
-            </Popover.Target>
-            <Popover.Dropdown style={{ pointerEvents: "none" }}>
-              <Text size="sm">Please login/register to continue</Text>
-            </Popover.Dropdown>
-          </Popover>
+
           <Indicator inline label={cartCount} size={16} color="red">
             <HiShoppingCart size={24} color="white" />
           </Indicator>
