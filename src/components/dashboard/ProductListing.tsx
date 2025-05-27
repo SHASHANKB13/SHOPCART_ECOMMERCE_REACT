@@ -146,6 +146,32 @@ const ProductList = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      const storedUserId = localStorage.getItem("userId");
+      const loginStatus = localStorage.getItem("login_status");
+
+      if (storedUserId && loginStatus === "true") {
+        try {
+          const response = await fetch(
+            `http://127.0.0.1:5000/api/cart/details/${storedUserId}`
+          );
+          const result = await response.json();
+
+          if (response.ok) {
+            setCartCount(result.data.count);
+          } else {
+            console.error("Failed to fetch cart count:", result.message);
+          }
+        } catch (error) {
+          console.error("Error fetching cart count:", error);
+        }
+      }
+    };
+
+    fetchCartCount();
+  }, []);
+
   const handleAddCartButton = async (productId: number) => {
     const userId = localStorage.getItem("userId"); // Adjust as needed
     const quantity = 1; // default quantity
