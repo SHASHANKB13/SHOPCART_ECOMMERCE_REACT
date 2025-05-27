@@ -116,22 +116,94 @@ const ProductList = () => {
     }
   };
 
-  // Function to handle adding a product to the cart
-  const handleAddCartButton = (productId: number) => {
-    setCartCount((prevCount) => prevCount + 1);
+  // // Function to handle adding a product to the cart
+  // const handleAddCartButton = (productId: number) => {
+  //   setCartCount((prevCount) => prevCount + 1);
 
-    // Update state for the specific product
-    setCartButtonState((prevState) => ({
-      ...prevState,
-      [productId]: "Added ☑️", // ✅ Updates only the clicked product's button
-    }));
-  };
+  //   // Update state for the specific product
+  //   setCartButtonState((prevState) => ({
+  //     ...prevState,
+  //     [productId]: "Added ☑️", // ✅ Updates only the clicked product's button
+  //   }));
+  // };
 
   const [loginModalOpened, { open: loginModalOpen, close: loginModalClose }] =
     useDisclosure(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState("");
+  const [loginStatus, setLoginStatus] = useState(false);
+
+  useEffect(() => {
+    const storedUsername = localStorage.getItem("username");
+    const storedUserId = localStorage.getItem("userId");
+    const loginStatus = localStorage.getItem("login_status");
+
+    if (storedUsername && storedUserId && loginStatus === "true") {
+      setUser(storedUsername);
+      setLoginStatus(true);
+      console.log("User is logged in:", storedUsername);
+    }
+  }, []);
+
+  const handleAddCartButton = async (productId: number) => {
+    const userId = localStorage.getItem("userId"); // Adjust as needed
+    const quantity = 1; // default quantity
+
+    if (!userId) {
+      console.error("User ID not found. Please log in.");
+      notifications.show({
+        title: "Error!",
+        icon: <IconX size={16} />,
+        autoClose: 3000,
+        message: "Please log in to add products to your cart.",
+        color: "red",
+        position: "top-right",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/cart/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: Number(userId),
+          product_id: productId,
+          quantity,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log("Product added to cart:", result);
+        notifications.show({
+          title: "Success!",
+          message: result.message || "Product added to cart successfully.",
+          icon: <IconCheck size={16} />,
+          autoClose: 3000,
+          color: "Green",
+          position: "top-right",
+        });
+
+        // Update cart count
+        setCartCount((prevCount) => prevCount + 1);
+
+        // Update button state
+        setCartButtonState((prevState) => ({
+          ...prevState,
+          [productId]: "added",
+        }));
+      } else {
+        console.error("Error adding to cart:", result.error);
+      }
+    } catch (error) {
+      console.error("Failed to add product to cart:", error);
+    }
+  };
 
   const handleLogin = async () => {
     try {
@@ -148,6 +220,9 @@ const ProductList = () => {
       if (response.ok) {
         const message = data.message;
         setUser(data?.data?.username);
+        localStorage.setItem("username", data?.data?.username || "");
+        localStorage.setItem("userId", data?.data?.user_id || "");
+        localStorage.setItem("login_status", "true");
         console.log("Login successful:", data);
         notifications.show({
           title: "Success!",
@@ -343,7 +418,7 @@ const ProductList = () => {
                     radius="md"
                     withBorder
                     className={classes.customCard}
-                    onClick={() => handleProductClick(product.id)}
+                    // onClick={() => handleProductClick(product.id)}
                     // style={{ border: "1px solid #E6E5E5" }}
                     style={{
                       border: "1px solid #E6E5E5",
@@ -361,6 +436,7 @@ const ProductList = () => {
                         alt={product.name}
                         height={160}
                         fit="contain"
+                        onClick={() => handleProductClick(product.id)}
                       />
                     </Card.Section>
 
@@ -402,9 +478,16 @@ const ProductList = () => {
                       mt="md"
                       radius="md"
                       color={theme.colors.deepBlue[4]}
+                      leftSection={
+                        cartButtonState[product.id] === "added" ? (
+                          <IconCheck size={18} color="white" />
+                        ) : null
+                      }
                       onClick={() => handleAddCartButton(product.id)}
                     >
-                      {cartButtonState[product.id] || "Add to Cart"}
+                      {cartButtonState[product.id] === "added"
+                        ? "Added"
+                        : "Add to Cart"}
                     </Button>
                   </Card>
                 </Grid.Col>
