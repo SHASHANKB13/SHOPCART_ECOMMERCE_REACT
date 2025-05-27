@@ -280,6 +280,9 @@ const ProductList = () => {
   const handleProductClick = (id: number) => {
     navigate(`/product/${id}`);
   };
+  const handleCartClick = () => {
+    navigate("/cart");
+  };
 
   return (
     <Container size="xl" mt="sm">
@@ -358,7 +361,12 @@ const ProductList = () => {
           {/* <BsPersonCircle size={24} color="white" /> */}
 
           <Indicator inline label={cartCount} size={16} color="red">
-            <HiShoppingCart size={24} color="white" />
+            <HiShoppingCart
+              size={24}
+              color="white"
+              onClick={handleCartClick}
+              style={{ cursor: "pointer" }}
+            />
           </Indicator>
         </Group>
       </Flex>

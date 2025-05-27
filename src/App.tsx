@@ -10,7 +10,9 @@ const ProductList = lazy(
 const ProductDetails = lazy(
   () => import("./components/dashboard/ProductDetail.tsx")
 );
-
+const CartDetails = lazy(
+  () => import("./components/dashboard/CartDetails.tsx")
+);
 const App = () => {
   return (
     <Box className="App" bg="white">
@@ -18,6 +20,12 @@ const App = () => {
         <Routes>
           <Route path="/" element={<ProductList />} />
           <Route path="/product/:id" element={<ProductDetails />} />
+          <Route path="/cart" element={<CartDetails />} />
+          {/* Add more routes as needed */}
+          {/* <Route path="/login" element={<Login />} /> */}
+          {/* <Route path="/signup" element={<Signup />} /> */}
+          {/* <Route path="/profile" element={<Profile />} /> */}
+          {/* <Route path="/orders" element={<Orders />} /> */}
         </Routes>
       </Router>
     </Box>
