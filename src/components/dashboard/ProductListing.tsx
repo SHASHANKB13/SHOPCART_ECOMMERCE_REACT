@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   Image,
@@ -23,10 +23,13 @@ import {
   PasswordInput,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useNavigate } from "react-router-dom";
+import { notifications } from "@mantine/notifications";
 import { HiShoppingCart } from "react-icons/hi";
 import { BsPersonCircle } from "react-icons/bs";
+import { IconX, IconCheck } from "@tabler/icons-react";
 import { BsSearch } from "react-icons/bs";
-import { productData } from "../../data.tsx";
+// import { productData } from "../../data.tsx";
 import classes from "./Card.module.css";
 
 type Product = {
@@ -44,57 +47,60 @@ type Product = {
 };
 
 const ProductList = () => {
-  const [data, setData] = useState<Product[]>(productData);
+  const navigate = useNavigate();
+  // states
+  const [data, setData] = useState<Product[]>([]);
+  const [productData, setProductData] = useState<Product[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 30000]);
   const [ratings, setRatings] = useState(["4"]);
-  const [jsonData, setJsonData] = useState<{
-    category: string;
-    brand: string;
-    products: Product[];
-  }>({ category: "", brand: "", products: [] });
   const [searchValue, setSearchValue] = useState("");
   const [cartCount, setCartCount] = useState(0);
   const [cartButtonState, setCartButtonState] = useState<{
     [key: string]: string;
   }>({});
+  const [jsonData, setJsonData] = useState<{
+    category: string;
+    brand: string;
+    products: Product[];
+  }>({
+    category: "",
+    brand: "",
+    products: [],
+  });
   const theme = useMantineTheme();
   const [opened, { close, open }] = useDisclosure(false);
-  // Handle category selection
-  const handleCategoryChange = (category: string) => {
-    if (!category) {
-      setJsonData({ ...jsonData, category: "", products: productData });
-      setData(productData);
-      return;
-    }
-    const filteredProducts = productData.filter(
-      (product) => product.category === category
-    );
-    setJsonData({ category, products: filteredProducts });
-    setData(filteredProducts);
-  };
 
-  // Handle brand selection
-  const handleBrandChange = (brand: string | null) => {
-    if (!brand) {
-      setJsonData({ ...jsonData, brand: "", products: productData });
-      setData(productData);
-      return;
-    }
-
-    const filteredProducts = productData.filter(
-      (product) => product.brand === brand
-    );
-
-    setJsonData({ ...jsonData, brand, products: filteredProducts });
-    setData(filteredProducts);
-  };
-
+  // fetch products
   useEffect(() => {
-    // Ensure jsonData updates when a category is selected
-    if (jsonData.category) {
-      setData(jsonData.products);
-    }
-  }, [jsonData]);
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:5000/api/products");
+        const result = await response.json();
+        const products = result?.data?.products || [];
+        setData(products);
+        setProductData(products);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  // handle filters
+  const handleCategoryChange = (category: string) => {
+    const filtered = productData.filter(
+      (p) => !category || p.category === category
+    );
+    setJsonData({ ...jsonData, category, products: filtered });
+    setData(filtered);
+  };
+
+  const handleBrandChange = (brand: string | null) => {
+    const filtered = productData.filter((p) => !brand || p.brand === brand);
+    setJsonData({ ...jsonData, brand: brand || "", products: filtered });
+    setData(filtered);
+  };
 
   const onSearchChange = (value: string) => {
     setSearchValue(value);
@@ -110,26 +116,172 @@ const ProductList = () => {
     }
   };
 
-  // Function to handle adding a product to the cart
-  const handleAddCartButton = (productId: number) => {
-    setCartCount((prevCount) => prevCount + 1);
+  // // Function to handle adding a product to the cart
+  // const handleAddCartButton = (productId: number) => {
+  //   setCartCount((prevCount) => prevCount + 1);
 
-    // Update state for the specific product
-    setCartButtonState((prevState) => ({
-      ...prevState,
-      [productId]: "Added ☑️", // ✅ Updates only the clicked product's button
-    }));
-  };
+  //   // Update state for the specific product
+  //   setCartButtonState((prevState) => ({
+  //     ...prevState,
+  //     [productId]: "Added ☑️", // ✅ Updates only the clicked product's button
+  //   }));
+  // };
 
   const [loginModalOpened, { open: loginModalOpen, close: loginModalClose }] =
     useDisclosure(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [user, setUser] = useState("");
+  const [loginStatus, setLoginStatus] = useState(false);
 
-  const handleLogin = () => {
-    // Replace this with your actual login API call
-    console.log("Logging in with:", { username, password });
-    close(); // close the modal after login
+  useEffect(() => {
+    const storedUsername = localStorage.getItem("username");
+    const storedUserId = localStorage.getItem("userId");
+    const loginStatus = localStorage.getItem("login_status");
+
+    if (storedUsername && storedUserId && loginStatus === "true") {
+      setUser(storedUsername);
+      setLoginStatus(true);
+      console.log("User is logged in:", storedUsername);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      const storedUserId = localStorage.getItem("userId");
+      const loginStatus = localStorage.getItem("login_status");
+
+      if (storedUserId && loginStatus === "true") {
+        try {
+          const response = await fetch(
+            `http://127.0.0.1:5000/api/cart/details/${storedUserId}`
+          );
+          const result = await response.json();
+
+          if (response.ok) {
+            setCartCount(result.data.count);
+          } else {
+            console.error("Failed to fetch cart count:", result.message);
+          }
+        } catch (error) {
+          console.error("Error fetching cart count:", error);
+        }
+      }
+    };
+
+    fetchCartCount();
+  }, []);
+
+  const handleAddCartButton = async (productId: number) => {
+    const userId = localStorage.getItem("userId"); // Adjust as needed
+    const quantity = 1; // default quantity
+
+    if (!userId) {
+      console.error("User ID not found. Please log in.");
+      notifications.show({
+        title: "Error!",
+        icon: <IconX size={16} />,
+        autoClose: 3000,
+        message: "Please log in to add products to your cart.",
+        color: "red",
+        position: "top-right",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/cart/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: Number(userId),
+          product_id: productId,
+          quantity,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log("Product added to cart:", result);
+        notifications.show({
+          title: "Success!",
+          message: result.message || "Product added to cart successfully.",
+          icon: <IconCheck size={16} />,
+          autoClose: 3000,
+          color: "Green",
+          position: "top-right",
+        });
+
+        // Update cart count
+        setCartCount((prevCount) => prevCount + 1);
+
+        // Update button state
+        setCartButtonState((prevState) => ({
+          ...prevState,
+          [productId]: "added",
+        }));
+      } else {
+        console.error("Error adding to cart:", result.error);
+      }
+    } catch (error) {
+      console.error("Failed to add product to cart:", error);
+    }
+  };
+
+  const handleLogin = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const message = data.message;
+        setUser(data?.data?.username);
+        localStorage.setItem("username", data?.data?.username || "");
+        localStorage.setItem("userId", data?.data?.user_id || "");
+        localStorage.setItem("login_status", "true");
+        console.log("Login successful:", data);
+        notifications.show({
+          title: "Success!",
+          message: message || "Login successful",
+          icon: <IconCheck size={16} />,
+          autoClose: 3000,
+          color: "Green",
+          position: "top-right",
+        });
+
+        loginModalClose();
+      } else {
+        console.error("Login failed:", data.error || "Unknown error");
+        notifications.show({
+          title: "Error!",
+          icon: <IconX size={16} />,
+          autoClose: 3000,
+          message: data.error || "Login failed",
+          color: "red",
+          position: "top-right",
+        });
+      }
+    } catch (error) {
+      console.error("Error logging in:", error);
+      alert("An error occurred. Please try again.");
+    }
+  };
+
+  const handleProductClick = (id: number) => {
+    navigate(`/product/${id}`);
+  };
+  const handleCartClick = () => {
+    navigate("/cart");
   };
 
   return (
@@ -174,30 +326,47 @@ const ProductList = () => {
         {/* Right Section */}
 
         <Group justify="space-between" gap="md" align="center" mr="lg">
+          {user ? (
+            <Flex align="center" gap="xs">
+              <Text c="white" size="sm">
+                Welcome, {user}
+              </Text>
+              <BsPersonCircle size={20} color="white" />
+            </Flex>
+          ) : (
+            <>
+              <Popover
+                width={200}
+                position="bottom"
+                withArrow
+                shadow="md"
+                opened={opened}
+              >
+                <Popover.Target>
+                  <BsPersonCircle
+                    onMouseEnter={open}
+                    onMouseLeave={close}
+                    size={24}
+                    color="white"
+                    onClick={loginModalOpen}
+                    style={{ cursor: "pointer" }}
+                  />
+                </Popover.Target>
+                <Popover.Dropdown style={{ pointerEvents: "none" }}>
+                  <Text size="sm">Please login/register to continue</Text>
+                </Popover.Dropdown>
+              </Popover>
+            </>
+          )}
           {/* <BsPersonCircle size={24} color="white" /> */}
-          <Popover
-            width={200}
-            position="bottom"
-            withArrow
-            shadow="md"
-            opened={opened}
-          >
-            <Popover.Target>
-              <BsPersonCircle
-                onMouseEnter={open}
-                onMouseLeave={close}
-                size={24}
-                color="white"
-                onClick={loginModalOpen}
-                style={{ cursor: "pointer" }}
-              />
-            </Popover.Target>
-            <Popover.Dropdown style={{ pointerEvents: "none" }}>
-              <Text size="sm">Please login/register to continue</Text>
-            </Popover.Dropdown>
-          </Popover>
+
           <Indicator inline label={cartCount} size={16} color="red">
-            <HiShoppingCart size={24} color="white" />
+            <HiShoppingCart
+              size={24}
+              color="white"
+              onClick={handleCartClick}
+              style={{ cursor: "pointer" }}
+            />
           </Indicator>
         </Group>
       </Flex>
@@ -283,6 +452,7 @@ const ProductList = () => {
                     radius="md"
                     withBorder
                     className={classes.customCard}
+                    // onClick={() => handleProductClick(product.id)}
                     // style={{ border: "1px solid #E6E5E5" }}
                     style={{
                       border: "1px solid #E6E5E5",
@@ -291,6 +461,7 @@ const ProductList = () => {
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "space-between", // Ensures content is evenly spaced
+                      cursor: "pointer",
                     }}
                   >
                     <Card.Section>
@@ -299,6 +470,7 @@ const ProductList = () => {
                         alt={product.name}
                         height={160}
                         fit="contain"
+                        onClick={() => handleProductClick(product.id)}
                       />
                     </Card.Section>
 
@@ -340,9 +512,16 @@ const ProductList = () => {
                       mt="md"
                       radius="md"
                       color={theme.colors.deepBlue[4]}
+                      leftSection={
+                        cartButtonState[product.id] === "added" ? (
+                          <IconCheck size={18} color="white" />
+                        ) : null
+                      }
                       onClick={() => handleAddCartButton(product.id)}
                     >
-                      {cartButtonState[product.id] || "Add to Cart"}
+                      {cartButtonState[product.id] === "added"
+                        ? "Added"
+                        : "Add to Cart"}
                     </Button>
                   </Card>
                 </Grid.Col>
