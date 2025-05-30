@@ -13,6 +13,7 @@ const ProductDetails = lazy(
 const CartDetails = lazy(
   () => import("./components/dashboard/CartDetails.tsx")
 );
+const CheckoutPage = lazy(() => import("./components/dashboard/Checkout.tsx"));
 const App = () => {
   return (
     <Box className="App" bg="white">
@@ -22,7 +23,7 @@ const App = () => {
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/cart" element={<CartDetails />} />
           {/* Add more routes as needed */}
-          {/* <Route path="/login" element={<Login />} /> */}
+          <Route path="/checkout" element={<CheckoutPage />} />
           {/* <Route path="/signup" element={<Signup />} /> */}
           {/* <Route path="/profile" element={<Profile />} /> */}
           {/* <Route path="/orders" element={<Orders />} /> */}

@@ -70,6 +70,10 @@ function ShoppingCartPage() {
     navigate("/");
   };
 
+  const handleCheckoutClick = () => {
+    navigate("/checkout");
+  };
+
   const fetchIntermediateCartDetails = async () => {
     const storedUserId = localStorage.getItem("userId");
     const loginStatus = localStorage.getItem("login_status");
@@ -568,6 +572,7 @@ function ShoppingCartPage() {
                     // bg="brand.6"
                     color={theme.colors.deepBlue[4]}
                     style={{ textTransform: "uppercase" }}
+                    onClick={handleCheckoutClick}
                   >
                     Checkout
                   </Button>
