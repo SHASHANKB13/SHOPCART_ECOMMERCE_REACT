@@ -260,11 +260,13 @@ const ProductDetail = () => {
                     <Radio
                       value="no-exchange"
                       label={`Buy without Exchange  ₹${product.price.toLocaleString()}`}
+                      color={theme.colors.deepBlue[4]}
                     />
                     <Radio
                       value="with-exchange"
                       label={`Buy with Exchange  up to ₹${product.exchangeOffer.toLocaleString()} off`}
                       description="Get extra ₹8,000 off on exchange of select models"
+                      color={theme.colors.deepBlue[4]}
                     />
                   </Stack>
                 </Radio.Group>

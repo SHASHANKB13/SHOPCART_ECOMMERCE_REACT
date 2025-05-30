@@ -21,6 +21,7 @@ import {
 } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { HiShoppingCart } from "react-icons/hi";
+import { IconArrowLeft } from "@tabler/icons-react";
 
 interface CartItem {
   product_id: number;
@@ -115,10 +116,22 @@ const CheckoutPage = () => {
           </Title>
         </Group>
       </Flex>
-      <Title order={2} mb="lg" ta="center" mt={40}>
-        CHECKOUT
-      </Title>
-
+      <Box pos="relative" mb="lg">
+        <Button
+          variant="transparent"
+          c={theme.colors.deepBlue[5]}
+          leftSection={<IconArrowLeft size={16} />}
+          fw={500}
+          onClick={handleContinueClick}
+          style={{ position: "absolute", left: 0 }}
+          mt="md"
+        >
+          Back
+        </Button>
+        <Title order={2} mb="lg" ta="center" mt={40}>
+          CHECKOUT
+        </Title>
+      </Box>
       <Grid>
         {/* Left Section - Billing Address, Shipping, Payment */}
         <Grid.Col span={{ base: 12, md: 8 }}>
