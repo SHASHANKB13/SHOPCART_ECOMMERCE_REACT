@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Container,
   Grid,
@@ -22,12 +22,60 @@ import {
 import { useNavigate } from "react-router-dom";
 import { HiShoppingCart } from "react-icons/hi";
 
+interface CartItem {
+  product_id: number;
+  name: string;
+  price: string;
+  quantity: number;
+  total_price: string;
+  category: string;
+  image: string;
+  brand: string;
+}
+
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const theme = useMantineTheme();
+  const [cartData, setCartData] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const handleContinueClick = () => {
     navigate("/");
   };
+
+  useEffect(() => {
+    const fetchCartDetails = async () => {
+      const storedUserId = localStorage.getItem("userId");
+      const loginStatus = localStorage.getItem("login_status");
+
+      if (storedUserId && loginStatus === "true") {
+        try {
+          setLoading(true);
+          const response = await fetch(
+            `http://127.0.0.1:5000/api/cart/details/${storedUserId}`
+          );
+          const result = await response.json();
+          const data = result?.data?.products || {};
+          setCartData(data); // ✅ Save full data: includes count & products
+        } catch (err) {
+          console.error("Error fetching cart details:", err);
+          setError("Failed to load cart details. Please try again.");
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchCartDetails();
+  }, []);
+
+  const subtotal = cartData.reduce(
+    (acc, item) => acc + parseFloat(item.total_price),
+    0
+  );
+  const gst = +(subtotal * 0.1).toFixed(2); // Assuming 10% GST
+  const grandTotal = +(subtotal + gst).toFixed(2);
+
   return (
     <Container
       size="100%"
@@ -204,7 +252,7 @@ const CheckoutPage = () => {
         </Grid.Col>
 
         {/* Right Section - Review Order */}
-        <Grid.Col span={{ base: 12, md: 4 }}>
+        {/* <Grid.Col span={{ base: 12, md: 4 }}>
           <Paper shadow="sm" p="lg" withBorder>
             <Title order={4} mb="md">
               REVIEW ORDER
@@ -261,6 +309,81 @@ const CheckoutPage = () => {
             <Group justify="center" mt="xs">
               <Image
                 width="auto"
+                height={50}
+                src="https://s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/43279012100/original/NQaEc3sL6Gso96fAdUWRiHZ5G9UUaHgUog.png?1639064459"
+                alt="payment logo"
+              />
+            </Group>
+          </Paper>
+        </Grid.Col> */}
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <Paper shadow="sm" p="lg" withBorder>
+            <Title order={4} mb="md">
+              REVIEW ORDER
+            </Title>
+
+            {cartData.map((item, index) => (
+              <Box key={index} mb="sm">
+                <Group align="flex-start">
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    width={80}
+                    height={80}
+                    fit="contain"
+                  />
+                  <Box>
+                    <Text fw={500}>{item.name}</Text>
+                    <Text size="xs" c="dimmed">
+                      {item.brand} - {item.category}
+                    </Text>
+                    <Group justify="apart" mt={4}>
+                      <Text size="sm" c="dimmed">
+                        QTY: {item.quantity}
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        ₹{parseFloat(item.total_price).toFixed(2)}
+                      </Text>
+                    </Group>
+                  </Box>
+                </Group>
+                {/* <Group justify="apart" mt={4}>
+                  <Text size="sm" c="dimmed">
+                    QTY: {item.quantity}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    ₹{parseFloat(item.total_price).toFixed(2)}
+                  </Text>
+                </Group> */}
+                <Divider my="sm" />
+              </Box>
+            ))}
+
+            <Group justify="apart">
+              <Text>Subtotal</Text>
+              <Text>₹{subtotal.toFixed(2)}</Text>
+            </Group>
+            <Group justify="apart">
+              <Text>GST</Text>
+              <Text>₹{gst.toFixed(2)}</Text>
+            </Group>
+            <Group justify="apart" mt="md">
+              <Text fw={700}>Grand Total</Text>
+              <Text fw={700}>₹{grandTotal.toFixed(2)}</Text>
+            </Group>
+
+            <Button
+              fullWidth
+              color={theme.colors.deepBlue?.[4] ?? "blue"}
+              mt="lg"
+            >
+              PROCESS ORDER
+            </Button>
+            <Text align="center" mt="md" size="xs" c="dimmed">
+              CART SECURED BY <b>Stripe</b>
+            </Text>
+            <Group justify="center" mt="xs">
+              <Image
                 height={50}
                 src="https://s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/43279012100/original/NQaEc3sL6Gso96fAdUWRiHZ5G9UUaHgUog.png?1639064459"
                 alt="payment logo"
