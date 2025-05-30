@@ -36,6 +36,7 @@ import { FaBoxOpen } from "react-icons/fa";
 import { TbCoinRupee } from "react-icons/tb";
 import { BiSupport } from "react-icons/bi";
 import { SlLogin } from "react-icons/sl";
+import RegisterModal from "./RegisterModal.tsx";
 
 type Product = {
   id: number;
@@ -73,8 +74,10 @@ const ProductList = () => {
     products: [],
   });
   const theme = useMantineTheme();
-  const [opened, { close, open }] = useDisclosure(false);
-
+  const [
+    registerModalOpened,
+    { open: registerModalOpen, close: registerModalClose },
+  ] = useDisclosure(false);
   // fetch products
   useEffect(() => {
     const fetchProducts = async () => {
@@ -426,7 +429,10 @@ const ProductList = () => {
                   >
                     Login
                   </Menu.Item>
-                  <Menu.Item leftSection={<BsPersonCircle size={14} />}>
+                  <Menu.Item
+                    leftSection={<BsPersonCircle size={14} />}
+                    onClick={registerModalOpen}
+                  >
                     Register/Sign Up
                   </Menu.Item>
                 </Menu.Dropdown>
@@ -664,6 +670,10 @@ const ProductList = () => {
           </Button>
         </Group>
       </Modal>
+      <RegisterModal
+        opened={registerModalOpened}
+        onClose={registerModalClose}
+      />
     </Container>
   );
 };

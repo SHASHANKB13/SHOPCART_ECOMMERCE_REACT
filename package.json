@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@mantine/core": "^7.16.1",
+    "@mantine/form": "^8.0.2",
     "@mantine/notifications": "^7.16.1",
     "@tabler/icons-react": "^3.29.0",
     "cra-template": "1.2.0",
