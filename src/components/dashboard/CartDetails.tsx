@@ -21,13 +21,17 @@ import {
   Indicator,
 } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
+import { notifications } from "@mantine/notifications";
 import {
   IconMinus,
   IconPlus,
   IconChevronDown,
   IconArrowLeft,
+  IconX,
+  IconCheck,
 } from "@tabler/icons-react";
 import { HiShoppingCart } from "react-icons/hi";
+import { MdDelete } from "react-icons/md";
 
 function ShoppingCartPage() {
   const navigate = useNavigate();
@@ -66,6 +70,24 @@ function ShoppingCartPage() {
     navigate("/");
   };
 
+  const fetchIntermediateCartDetails = async () => {
+    const storedUserId = localStorage.getItem("userId");
+    const loginStatus = localStorage.getItem("login_status");
+    if (storedUserId && loginStatus === "true") {
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:5000/api/cart/details/${storedUserId}`
+        );
+        const result = await response.json();
+        const data = result?.data || {};
+        setCartData(data); // ✅ Save full data: includes count & products
+      } catch (err) {
+        console.error("Error fetching cart details:", err);
+        setError("Failed to load cart details. Please try again.");
+      }
+    }
+  };
+
   if (loading) {
     return (
       <MantineProvider>
@@ -91,6 +113,33 @@ function ShoppingCartPage() {
   if (!cartData || cartData.products?.length === 0) {
     return (
       <MantineProvider>
+        <Flex
+          h={60}
+          bg={theme.colors.deepBlue[4]}
+          mb="md"
+          style={{
+            alignItems: "center",
+            justifyContent: "space-between",
+            position: "fixed",
+            zIndex: 1000,
+            top: 0, // ✅ Sticks it to the top
+            left: 0,
+            width: "100%",
+          }}
+        >
+          {/* Left Section */}
+          <Group ml="xl">
+            <HiShoppingCart
+              size={24}
+              color="yellow"
+              onClick={handleContinueClick}
+              style={{ cursor: "pointer" }}
+            />
+            <Title order={4} c="white">
+              Shop Cart
+            </Title>
+          </Group>
+        </Flex>
         <Center style={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
           <Text fz="xl" c="dimmed">
             Your shopping cart is empty.
@@ -108,6 +157,108 @@ function ShoppingCartPage() {
   );
   const shippingCost = 5.0;
   const totalCost = subtotal + shippingCost;
+
+  const handleAddButton = async (productId: number) => {
+    const userId = localStorage.getItem("userId"); // Adjust as needed
+    const quantity = 1; // default quantity
+
+    if (!userId) {
+      console.error("User ID not found. Please log in.");
+      notifications.show({
+        title: "Error!",
+        icon: <IconX size={16} />,
+        autoClose: 3000,
+        message: "Please log in to add products to your cart.",
+        color: "red",
+        position: "top-right",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/cart/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: Number(userId),
+          product_id: productId,
+          quantity,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log("Product added to cart:", result);
+        fetchIntermediateCartDetails();
+        notifications.show({
+          title: "Success!",
+          message: result.message || "Product added to cart successfully.",
+          icon: <IconCheck size={16} />,
+          autoClose: 3000,
+          color: "Green",
+          position: "top-right",
+        });
+      } else {
+        console.error("Error adding to cart:", result.error);
+      }
+    } catch (error) {
+      console.error("Failed to add product to cart:", error);
+    }
+  };
+
+  const handleRemoveButton = async (productId: number) => {
+    const userId = localStorage.getItem("userId"); // Adjust as needed
+    const quantity = 1; // default quantity
+
+    if (!userId) {
+      console.error("User ID not found. Please log in.");
+      notifications.show({
+        title: "Error!",
+        icon: <IconX size={16} />,
+        autoClose: 3000,
+        message: "Please log in to add products to your cart.",
+        color: "red",
+        position: "top-right",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/cart/remove", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: Number(userId),
+          product_id: productId,
+          quantity,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log("Product removed from cart:", result);
+        fetchIntermediateCartDetails();
+        notifications.show({
+          title: "Success!",
+          message: result.message || "Product removed from cart successfully.",
+          icon: <IconCheck size={16} />,
+          autoClose: 3000,
+          color: "Green",
+          position: "top-right",
+        });
+      } else {
+        console.error("Error removing from cart:", result.error);
+      }
+    } catch (error) {
+      console.error("Failed to remove product from cart:", error);
+    }
+  };
 
   return (
     <MantineProvider
@@ -157,7 +308,12 @@ function ShoppingCartPage() {
         >
           {/* Left Section */}
           <Group ml="xl">
-            <HiShoppingCart size={24} color="yellow" />
+            <HiShoppingCart
+              size={24}
+              color="yellow"
+              onClick={handleContinueClick}
+              style={{ cursor: "pointer" }}
+            />
             <Title order={4} c="white">
               Shop Cart
             </Title>
@@ -167,6 +323,7 @@ function ShoppingCartPage() {
           shadow="md"
           radius="md"
           p="xl"
+          mt={60}
           style={{ width: "100%", maxWidth: 1200, backgroundColor: "#ffffff" }}
         >
           <Grid gutter="xl">
@@ -238,6 +395,10 @@ function ShoppingCartPage() {
                               p={0}
                               h="auto"
                               style={{ alignSelf: "flex-start" }}
+                              onClick={() =>
+                                handleRemoveButton(item.product_id)
+                              }
+                              leftSection={<MdDelete size={16} />}
                             >
                               Remove
                             </Button>
@@ -247,7 +408,12 @@ function ShoppingCartPage() {
                       <Grid.Col span={2}>
                         <Group gap={0}>
                           <ActionIcon variant="default" size="md" radius="xs">
-                            <IconMinus size={16} />
+                            <IconMinus
+                              size={16}
+                              onClick={() =>
+                                handleRemoveButton(item.product_id)
+                              }
+                            />
                           </ActionIcon>
                           <TextInput
                             value={item.quantity}
@@ -264,7 +430,10 @@ function ShoppingCartPage() {
                             }}
                           />
                           <ActionIcon variant="default" size="md" radius="xs">
-                            <IconPlus size={16} />
+                            <IconPlus
+                              size={16}
+                              onClick={() => handleAddButton(item.product_id)}
+                            />
                           </ActionIcon>
                         </Group>
                       </Grid.Col>
