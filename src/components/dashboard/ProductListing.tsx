@@ -18,19 +18,24 @@ import {
   Flex,
   TextInput,
   Indicator,
-  Popover,
   Modal,
   PasswordInput,
+  Menu,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useNavigate } from "react-router-dom";
 import { notifications } from "@mantine/notifications";
 import { HiShoppingCart } from "react-icons/hi";
 import { BsPersonCircle } from "react-icons/bs";
-import { IconX, IconCheck } from "@tabler/icons-react";
+import { IconX, IconCheck, IconSettings, IconTrash } from "@tabler/icons-react";
 import { BsSearch } from "react-icons/bs";
 // import { productData } from "../../data.tsx";
 import classes from "./Card.module.css";
+import { IoIosLogOut } from "react-icons/io";
+import { FaBoxOpen } from "react-icons/fa";
+import { TbCoinRupee } from "react-icons/tb";
+import { BiSupport } from "react-icons/bi";
+import { SlLogin } from "react-icons/sl";
 
 type Product = {
   id: number;
@@ -116,16 +121,28 @@ const ProductList = () => {
     }
   };
 
-  // // Function to handle adding a product to the cart
-  // const handleAddCartButton = (productId: number) => {
-  //   setCartCount((prevCount) => prevCount + 1);
+  const [
+    logoutModalOpened,
+    { open: logoutModalOpen, close: logoutModalClose },
+  ] = useDisclosure(false);
 
-  //   // Update state for the specific product
-  //   setCartButtonState((prevState) => ({
-  //     ...prevState,
-  //     [productId]: "Added ☑️", // ✅ Updates only the clicked product's button
-  //   }));
-  // };
+  const handleLogout = () => {
+    // Clear user data from localStorage
+    localStorage.clear();
+    console.log("User logged out successfully");
+    setUser("");
+    setLoginStatus(false);
+    setCartCount(0);
+    logoutModalClose();
+    notifications.show({
+      title: "Logged out",
+      message: "You have been logged out successfully.",
+      icon: <IconCheck size={16} />,
+      autoClose: 3000,
+      color: "green",
+      position: "top-right",
+    });
+  };
 
   const [loginModalOpened, { open: loginModalOpen, close: loginModalClose }] =
     useDisclosure(false);
@@ -281,6 +298,18 @@ const ProductList = () => {
     navigate(`/product/${id}`);
   };
   const handleCartClick = () => {
+    if (!loginStatus) {
+      notifications.show({
+        title: "Error!",
+        icon: <IconX size={16} />,
+        autoClose: 3000,
+        message: "Please log in to view your cart.",
+        color: "red",
+        position: "top-right",
+      });
+      return;
+    }
+    // Navigate to cart page
     navigate("/cart");
   };
 
@@ -331,31 +360,77 @@ const ProductList = () => {
               <Text c="white" size="sm">
                 Welcome, {user}
               </Text>
-              <BsPersonCircle size={20} color="white" />
+
+              <Menu
+                shadow="md"
+                width={200}
+                trigger="hover"
+                openDelay={100}
+                closeDelay={400}
+              >
+                <Menu.Target>
+                  <BsPersonCircle size={24} color="white" />
+                </Menu.Target>
+
+                <Menu.Dropdown mt={15}>
+                  <Menu.Label>Application</Menu.Label>
+
+                  <Menu.Item leftSection={<FaBoxOpen size={14} />}>
+                    Orders
+                  </Menu.Item>
+                  <Menu.Item leftSection={<TbCoinRupee size={14} />}>
+                    Rewards
+                  </Menu.Item>
+                  <Menu.Item leftSection={<BiSupport size={14} />}>
+                    Customer care
+                  </Menu.Item>
+                  <Menu.Item leftSection={<IconSettings size={14} />}>
+                    Settings
+                  </Menu.Item>
+                  <Menu.Divider />
+
+                  <Menu.Label>Account</Menu.Label>
+                  <Menu.Item leftSection={<BsPersonCircle size={14} />}>
+                    Profile
+                  </Menu.Item>
+                  <Menu.Item
+                    color="red"
+                    leftSection={<IoIosLogOut size={14} />}
+                    onClick={logoutModalOpen}
+                  >
+                    Logout
+                  </Menu.Item>
+                  <Menu.Item color="red" leftSection={<IconTrash size={14} />}>
+                    Delete my account
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
             </Flex>
           ) : (
             <>
-              <Popover
-                width={200}
-                position="bottom"
-                withArrow
+              <Menu
                 shadow="md"
-                opened={opened}
+                width={200}
+                trigger="hover"
+                openDelay={100}
+                closeDelay={400}
               >
-                <Popover.Target>
-                  <BsPersonCircle
-                    onMouseEnter={open}
-                    onMouseLeave={close}
-                    size={24}
-                    color="white"
+                <Menu.Target>
+                  <BsPersonCircle size={24} color="white" />
+                </Menu.Target>
+
+                <Menu.Dropdown mt={15}>
+                  <Menu.Item
+                    leftSection={<SlLogin size={14} />}
                     onClick={loginModalOpen}
-                    style={{ cursor: "pointer" }}
-                  />
-                </Popover.Target>
-                <Popover.Dropdown style={{ pointerEvents: "none" }}>
-                  <Text size="sm">Please login/register to continue</Text>
-                </Popover.Dropdown>
-              </Popover>
+                  >
+                    Login
+                  </Menu.Item>
+                  <Menu.Item leftSection={<BsPersonCircle size={14} />}>
+                    Register/Sign Up
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
             </>
           )}
           {/* <BsPersonCircle size={24} color="white" /> */}
@@ -569,6 +644,26 @@ const ProductList = () => {
           </Stack>
         </Modal>
       </>
+      <Modal
+        opened={logoutModalOpened}
+        onClose={logoutModalClose}
+        title="Logout"
+        centered
+      >
+        <Text>Are you sure you want to logout?</Text>
+        <Group justify="flex-end" mt="md">
+          <Button
+            variant="light"
+            color={theme.colors.deepBlue[4]}
+            onClick={logoutModalClose}
+          >
+            Cancel
+          </Button>
+          <Button color="red" onClick={handleLogout}>
+            Logout
+          </Button>
+        </Group>
+      </Modal>
     </Container>
   );
 };
