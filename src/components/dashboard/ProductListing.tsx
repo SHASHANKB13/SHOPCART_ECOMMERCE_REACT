@@ -301,6 +301,7 @@ const ProductList = () => {
     navigate(`/product/${id}`);
   };
   const handleCartClick = () => {
+    const loginStatus = localStorage.getItem("login_status");
     if (!loginStatus) {
       notifications.show({
         title: "Error!",

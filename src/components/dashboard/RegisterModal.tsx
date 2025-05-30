@@ -52,9 +52,9 @@ export default function RegisterModal({ opened, onClose }) {
       if (response.ok) {
         const message = data.message;
         setUser(data?.data?.username);
-        localStorage.setItem("username", data?.data?.username || "");
-        localStorage.setItem("userId", data?.data?.user_id || "");
-        localStorage.setItem("login_status", "true");
+        // localStorage.setItem("username", data?.data?.username || "");
+        // localStorage.setItem("userId", data?.data?.user_id || "");
+        // localStorage.setItem("login_status", "true");
         console.log("Registration successful:", data);
         notifications.show({
           title: "Success!",
@@ -95,7 +95,13 @@ export default function RegisterModal({ opened, onClose }) {
         blur: 3,
       }}
     >
-      <form onSubmit={form.onSubmit(handleSubmit)}>
+      {/* <form onSubmit={form.onSubmit(handleSubmit)}> */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(form.values);
+        }}
+      >
         <TextInput
           label="Username"
           placeholder="Your username"
