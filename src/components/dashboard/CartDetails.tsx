@@ -18,6 +18,7 @@ import {
   Loader,
   Center,
   useMantineTheme,
+  Indicator,
 } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import {
@@ -26,6 +27,7 @@ import {
   IconChevronDown,
   IconArrowLeft,
 } from "@tabler/icons-react";
+import { HiShoppingCart } from "react-icons/hi";
 
 function ShoppingCartPage() {
   const navigate = useNavigate();
@@ -129,7 +131,7 @@ function ShoppingCartPage() {
       }}
     >
       <Container
-        size="xl"
+        size="100%"
         py="xl"
         style={{
           minHeight: "100vh",
@@ -139,6 +141,28 @@ function ShoppingCartPage() {
           backgroundColor: "#f5f5f5",
         }}
       >
+        <Flex
+          h={60}
+          bg={theme.colors.deepBlue[4]}
+          mb="md"
+          style={{
+            alignItems: "center",
+            justifyContent: "space-between",
+            position: "fixed",
+            zIndex: 1000,
+            top: 0, // ✅ Sticks it to the top
+            left: 0,
+            width: "100%",
+          }}
+        >
+          {/* Left Section */}
+          <Group ml="xl">
+            <HiShoppingCart size={24} color="yellow" />
+            <Title order={4} c="white">
+              Shop Cart
+            </Title>
+          </Group>
+        </Flex>
         <Paper
           shadow="md"
           radius="md"
@@ -347,7 +371,7 @@ function ShoppingCartPage() {
                         radius="xs"
                         style={{
                           height: 36,
-                          width: 80,
+                          //   width: 80,
                           textTransform: "uppercase",
                         }}
                       >
