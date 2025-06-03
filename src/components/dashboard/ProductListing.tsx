@@ -269,6 +269,7 @@ const ProductList = () => {
         localStorage.setItem("username", data?.data?.username || "");
         localStorage.setItem("userId", data?.data?.user_id || "");
         localStorage.setItem("login_status", "true");
+        localStorage.setItem("isAdmin", "false");
         console.log("Login successful:", data);
         notifications.show({
           title: "Success!",
