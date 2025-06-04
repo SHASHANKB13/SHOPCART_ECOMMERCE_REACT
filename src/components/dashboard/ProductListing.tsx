@@ -318,6 +318,45 @@ const ProductList = () => {
     navigate("/cart");
   };
 
+  const getCartProductIds = async (): Promise<number[]> => {
+    const storedUserId = localStorage.getItem("userId");
+    if (!storedUserId) {
+      console.error("User ID not found. Please log in.");
+      return [];
+    }
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:5000/api/cart/details/${storedUserId}`
+      );
+      const result = await response.json();
+
+      if (response.ok) {
+        // Extract product_ids from the products array
+        return result.data.products.map((product: any) => product.product_id);
+      } else {
+        console.error("Failed to fetch cart products:", result.message);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching cart products:", error);
+      return [];
+    }
+  };
+  const [cartProductIds, setCartProductIds] = useState<number[]>([]);
+
+  // Fetch on mount
+  useEffect(() => {
+    const fetchCart = async () => {
+      const ids = await getCartProductIds();
+      setCartProductIds(ids);
+    };
+    fetchCart();
+  }, []);
+
+  const isProductInCart = (productId: number): boolean => {
+    return cartProductIds.includes(productId);
+  };
+
   return (
     <Container size="xl" mt="sm">
       {/* Header Section */}
@@ -545,9 +584,33 @@ const ProductList = () => {
                       flexDirection: "column",
                       justifyContent: "space-between", // Ensures content is evenly spaced
                       cursor: "pointer",
+                      position: "relative",
                     }}
                   >
                     <Card.Section>
+                      {isProductInCart(product.id) && (
+                        <Badge
+                          color={theme.colors.deepBlue[4]}
+                          size="sm"
+                          radius="sm"
+                          variant="light"
+                          style={{
+                            position: "absolute",
+                            top: 10,
+                            right: 10,
+                            zIndex: 1,
+                          }}
+                          rightSection={
+                            <IconCheck
+                              size={16}
+                              color={theme.colors.deepBlue[4]}
+                            />
+                          }
+                        >
+                          added
+                        </Badge>
+                      )}
+
                       <Image
                         src={product.image}
                         alt={product.name}
@@ -589,23 +652,38 @@ const ProductList = () => {
                         ({product.reviewsCount} Reviews)
                       </Text>
                     </Group>
-
-                    <Button
-                      fullWidth
-                      mt="md"
-                      radius="md"
-                      color={theme.colors.deepBlue[4]}
-                      leftSection={
-                        cartButtonState[product.id] === "added" ? (
-                          <IconCheck size={18} color="white" />
-                        ) : null
-                      }
-                      onClick={() => handleAddCartButton(product.id)}
-                    >
-                      {cartButtonState[product.id] === "added"
-                        ? "Added"
-                        : "Add to Cart"}
-                    </Button>
+                    {isProductInCart(product.id) ? (
+                      <Button
+                        fullWidth
+                        mt="md"
+                        radius="md"
+                        color={theme.colors.deepBlue[4]}
+                        // leftSection={<IconCheck size={18} color="white" />}
+                        rightSection={
+                          <HiShoppingCart size={18} color="white" />
+                        }
+                        onClick={handleCartClick}
+                      >
+                        Go to Cart
+                      </Button>
+                    ) : (
+                      <Button
+                        fullWidth
+                        mt="md"
+                        radius="md"
+                        color={theme.colors.deepBlue[4]}
+                        leftSection={
+                          cartButtonState[product.id] === "added" ? (
+                            <IconCheck size={18} color="white" />
+                          ) : null
+                        }
+                        onClick={() => handleAddCartButton(product.id)}
+                      >
+                        {cartButtonState[product.id] === "added"
+                          ? "Added"
+                          : "Add to Cart"}
+                      </Button>
+                    )}
                   </Card>
                 </Grid.Col>
               ))

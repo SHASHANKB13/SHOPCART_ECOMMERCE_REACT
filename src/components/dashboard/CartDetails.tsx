@@ -423,7 +423,7 @@ function ShoppingCartPage() {
                             value={item.quantity}
                             readOnly
                             size="md"
-                            w={40}
+                            w={50}
                             styles={{
                               input: {
                                 textAlign: "center",
