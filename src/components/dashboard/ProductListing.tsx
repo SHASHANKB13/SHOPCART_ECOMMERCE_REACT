@@ -57,7 +57,8 @@ const ProductList = () => {
   // states
   const [data, setData] = useState<Product[]>([]);
   const [productData, setProductData] = useState<Product[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 30000]);
+  const [enablePriceFilter, setEnablePriceFilter] = useState(false);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 80000]);
   const [ratings, setRatings] = useState(["4"]);
   const [searchValue, setSearchValue] = useState("");
   const [cartCount, setCartCount] = useState(0);
@@ -94,6 +95,19 @@ const ProductList = () => {
 
     fetchProducts();
   }, []);
+  // Filter products based on price range
+ useEffect(() => {
+  if (enablePriceFilter) {
+    const filtered = productData.filter(
+      (product) =>
+        product.price >= priceRange[0] && product.price <= priceRange[1]
+    );
+    setData(filtered);
+  } else {
+    // If filter is disabled, show all products
+    setData(productData);
+  }
+}, [priceRange, productData, enablePriceFilter]);
 
   // handle filters
   const handleCategoryChange = (category: string) => {
@@ -461,17 +475,23 @@ const ProductList = () => {
             <Title order={5}>Filters</Title>
 
             {/* Price Range Filter */}
-            <Text>Price</Text>
+            {/* <Text>Price</Text> */}
+            <Checkbox
+              label="Filter by price"
+              checked={enablePriceFilter}
+              onChange={(event) => setEnablePriceFilter(event.currentTarget.checked)}
+              color={theme.colors.deepBlue[4]}
+            />
             <RangeSlider
               min={0}
-              max={30000}
+              max={80000}
               step={1000}
               value={priceRange}
               color={theme.colors.deepBlue[4]}
               onChange={setPriceRange}
               marks={[
                 { value: 0, label: "Min" },
-                { value: 30000, label: "Max" },
+                { value: 80000, label: "Max" },
               ]}
             />
 
