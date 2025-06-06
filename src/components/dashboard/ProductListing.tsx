@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Card,
   Image,
@@ -23,6 +23,7 @@ import {
   Menu,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { debounce } from "lodash";
 import { useNavigate } from "react-router-dom";
 import { notifications } from "@mantine/notifications";
 import { HiShoppingCart } from "react-icons/hi";
@@ -110,19 +111,60 @@ const ProductList = () => {
     setData(filtered);
   };
 
-  const onSearchChange = (value: string) => {
-    setSearchValue(value);
-    const searchTerm = value.trim().toLowerCase();
+  // const onSearchChange = (value: string) => {
+  //   setSearchValue(value);
+  //   const searchTerm = value.trim().toLowerCase();
 
-    if (!searchTerm) {
-      setData(productData);
-    } else {
-      const filteredData = productData.filter((d) =>
-        d.name.toLowerCase().includes(searchTerm)
-      );
-      setData(filteredData);
-    }
-  };
+  //   if (!searchTerm) {
+  //     setData(productData);
+  //   } else {
+  //     const filteredData = productData.filter((d) =>
+  //       d.name.toLowerCase().includes(searchTerm)
+  //     );
+  //     setData(filteredData);
+  //   }
+  // };
+
+  // Debounced search function
+  const debouncedSearch = useMemo(
+    () =>
+      debounce(async (value) => {
+        try {
+          const response = await fetch(
+            `http://127.0.0.1:5000/api/search/products?search=${encodeURIComponent(
+              value
+            )}`
+          );
+
+          if (response.ok) {
+            const result = await response.json();
+            const products = result?.data?.products || [];
+
+            if (products.length > 0) {
+              setData(products);
+              setProductData(products);
+            } else {
+              console.error("No products found");
+              notifications.show({
+                title: "No Results",
+                icon: <IconX size={16} />,
+                autoClose: 3000,
+                message: "No products found",
+                color: "red",
+                position: "top-right",
+              });
+            }
+          } else {
+            console.error("Failed to fetch products:", response.status);
+            alert("Server error while searching. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error in searching products:", error);
+          alert("An error occurred. Please try again.");
+        }
+      }, 400), // 400ms debounce delay
+    []
+  );
 
   const [
     logoutModalOpened,
@@ -385,7 +427,7 @@ const ProductList = () => {
 
         {/* Search Bar */}
 
-        <Select
+        {/* <Select
           placeholder="Search for Products, Brand and More"
           searchValue={searchValue}
           onSearchChange={onSearchChange}
@@ -393,6 +435,17 @@ const ProductList = () => {
           dropdownOpened={false}
           rightSectionPointerEvents="none"
           rightSection={<BsSearch size={20} />}
+          style={{ width: "40%" }}
+        /> */}
+        <TextInput
+          value={searchValue}
+          onChange={(e) => {
+            const value = e.currentTarget.value;
+            setSearchValue(value);
+            debouncedSearch(value);
+          }}
+          rightSection={<BsSearch size={16} />}
+          placeholder="Search for Products, Brand and More"
           style={{ width: "40%" }}
         />
 
